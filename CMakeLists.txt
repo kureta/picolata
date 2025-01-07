@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 3.17)
 
-# ====== Fetch and set up dependencies ======
+# ====== set board and import pico-sdk ======
+set(PICO_BOARD pico_w)
 include(cmake/pico_sdk_import.cmake)
 
-# =======
+# ======= define project ======
 project(picolata C CXX)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
@@ -11,9 +12,7 @@ set(CMAKE_CXX_STANDARD 17)
 # initialize the Raspberry Pi Pico SDK
 pico_sdk_init()
 
-# ======= Our Code =======
-set(PICO_BOARD pico_w)
-
+# ======= define targets =======
 add_executable(blink_simple src/main.c)
 
 target_include_directories(blink_simple PRIVATE src/include)
@@ -30,6 +29,7 @@ pico_enable_stdio_uart(blink_simple 0)
 # create map/bin/hex/uf2 file etc.
 pico_add_extra_outputs(blink_simple)
 
+# ====== installation command ======
 # Define the path to the output UF2 file
 set(OUTPUT_UF2 "${CMAKE_BINARY_DIR}/blink_simple.uf2")
 
