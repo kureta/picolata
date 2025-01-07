@@ -13,25 +13,25 @@ set(CMAKE_CXX_STANDARD 17)
 pico_sdk_init()
 
 # ======= define targets =======
-add_executable(blink_simple src/main.c)
+add_executable(${CMAKE_PROJECT_NAME} src/main.c)
 
-target_include_directories(blink_simple PRIVATE src/include)
+target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE src/include)
 
 target_link_libraries(
-    blink_simple
+    ${CMAKE_PROJECT_NAME}
     pico_stdlib
     pico_cyw43_arch_lwip_threadsafe_background
 )
 
-pico_enable_stdio_usb(blink_simple 1)
-pico_enable_stdio_uart(blink_simple 0)
+pico_enable_stdio_usb(${CMAKE_PROJECT_NAME} 1)
+pico_enable_stdio_uart(${CMAKE_PROJECT_NAME} 0)
 
 # create map/bin/hex/uf2 file etc.
-pico_add_extra_outputs(blink_simple)
+pico_add_extra_outputs(${CMAKE_PROJECT_NAME})
 
 # ====== installation command ======
 # Define the path to the output UF2 file
-set(OUTPUT_UF2 "${CMAKE_BINARY_DIR}/blink_simple.uf2")
+set(OUTPUT_UF2 "${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}.uf2")
 
 install(
     CODE
