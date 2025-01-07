@@ -243,7 +243,7 @@ void run_tcp_client_test(void) {
 int main() {
   stdio_init_all();
   sleep_ms(1000);
-  printf("Woke!");
+  printf("Woke!\n");
 
   if (cyw43_arch_init()) {
     DEBUG_printf("failed to initialise\n");

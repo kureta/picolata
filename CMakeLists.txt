@@ -29,3 +29,20 @@ pico_enable_stdio_uart(blink_simple 0)
 
 # create map/bin/hex/uf2 file etc.
 pico_add_extra_outputs(blink_simple)
+
+# Define the path to the output UF2 file
+set(OUTPUT_UF2 "${CMAKE_BINARY_DIR}/blink_simple.uf2")
+
+install(
+    CODE
+        "
+execute_process(
+COMMAND picotool load -v -x ${OUTPUT_UF2} -f
+WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+RESULT_VARIABLE result
+)
+if(NOT result EQUAL 0)
+message(FATAL_ERROR \"Picotool command failed\")
+endif()
+"
+)
