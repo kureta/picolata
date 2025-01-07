@@ -4,13 +4,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <pico/time.h>
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
-
 #include "pico/cyw43_arch.h"
-#include "pico/stdlib.h"
+#include "pico/stdlib.h" // IWYU pragma: keep
 
 #include "lwip/pbuf.h"
 #include "lwip/tcp.h"
