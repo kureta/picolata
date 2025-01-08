@@ -23,6 +23,9 @@ target_link_libraries(
     pico_cyw43_arch_lwip_threadsafe_background
 )
 
+add_compile_definitions(WIFI_SSID="$ENV{WIFI_SSID}")
+add_compile_definitions(WIFI_PASS="$ENV{WIFI_PASS}")
+
 pico_enable_stdio_usb(${CMAKE_PROJECT_NAME} 1)
 pico_enable_stdio_uart(${CMAKE_PROJECT_NAME} 0)
 

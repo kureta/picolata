@@ -4,8 +4,6 @@
 #include "lwip/pbuf.h"
 #include "lwip/tcp.h"
 
-#define WIFI_SSID "kureta"
-#define WIFI_PASS "tophaneli1"
 #define PORT 8080
 
 static err_t recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p,
@@ -17,6 +15,7 @@ static err_t recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p,
 
   tcp_recved(tpcb, p->tot_len);
   tcp_write(tpcb, p->payload, p->len, TCP_WRITE_FLAG_COPY);
+  printf("Received: %.*s\n", p->len, (char *)p->payload);
   pbuf_free(p);
 
   return ERR_OK;
