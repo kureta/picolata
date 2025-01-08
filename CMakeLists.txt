@@ -13,7 +13,7 @@ set(CMAKE_CXX_STANDARD 17)
 pico_sdk_init()
 
 # ======= define targets =======
-add_executable(${CMAKE_PROJECT_NAME} src/main.cpp)
+add_executable(${CMAKE_PROJECT_NAME} src/main.cpp src/app/app.cpp)
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE src/include)
 
