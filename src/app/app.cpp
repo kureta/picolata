@@ -1,7 +1,6 @@
 #include "app.hpp"
 #include "pico/cyw43_arch.h"
 #include "pico/stdlib.h" // IWYU pragma: keep
-#include <stdio.h>
 
 // TODO: Separate network and OSC logic
 App::App(const char *target, const uint16_t port)
