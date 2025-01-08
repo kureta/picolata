@@ -6,8 +6,11 @@ FetchContent_Declare(
     GIT_SUBMODULES_RECURSE FALSE
 )
 
-message("Downloading Raspberry Pi Pico SDK")
-FetchContent_Populate(pico_sdk)
+if(NOT pico_sdk)
+    message("Downloading Raspberry Pi Pico SDK")
+    FetchContent_Populate(pico_sdk)
+    set(PICO_SDK_PATH ${pico_sdk_SOURCE_DIR})
+endif()
 
 set(PICO_SDK_INIT_CMAKE_FILE ${PICO_SDK_PATH}/pico_sdk_init.cmake)
 if(NOT EXISTS ${PICO_SDK_INIT_CMAKE_FILE})
