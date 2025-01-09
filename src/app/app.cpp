@@ -1,6 +1,8 @@
 #include "app.hpp"
 #include "pico/cyw43_arch.h"
 #include "pico/stdlib.h" // IWYU pragma: keep
+#include "lwip/udp.h"
+#include "lwip/ip_addr.h"
 
 // TODO: Separate network and OSC logic
 App::App(const char *target, const uint16_t port)
@@ -27,37 +29,60 @@ bool App::initialize() {
     return false;
   } else {
     printf("Connected.\n");
-    client = new picoosc::OSCClient(target, port);
+    run();
     return true;
   }
 }
 
 void App::run() {
-  if (!client) {
-    printf("Client not initialized.\n");
+
+  // declare a buffer for writing the OSC packet into
+  char buffer[1024];
+
+  // write the OSC packet to the buffer
+  // returns the number of bytes written to the buffer, negative on error
+  // note that tosc_write will clear the entire buffer before writing to it
+  int len = tosc_writeMessage(
+      buffer, sizeof(buffer),
+      "/ping", // the address
+      "fsi",   // the format; 'f':32-bit float, 's':ascii string, 'i':32-bit integer
+      1.0f, "hello", 2);
+
+  // send the data out of the socket
+  // Create a new UDP protocol control block
+  struct udp_pcb *pcb = udp_new();
+  if (!pcb) {
+    printf("Could not create PCB\n");
     return;
   }
 
-  picoosc::OSCMessage msg;
+  // Prepare the broadcast IP address
+  ip_addr_t broadcast_addr;
+  IP4_ADDR(&broadcast_addr, 255, 255, 255, 255);  // Adjust to your subnet
+
   while (true) {
-    msg.addAddress("/cont_1");
-    msg.add<float>(0.01);
-    msg.send(*client);
-    msg.clear();
+    // Bind PCB to a port (e.g., 12345)
+    if (udp_bind(pcb, IP_ADDR_ANY, 3333) != ERR_OK) {
+      printf("Bind failed\n");
+      udp_remove(pcb);
+      return;
+    }
 
-    msg.addAddress("/cont_2");
-    msg.add<float>(0.7);
-    msg.send(*client);
-    msg.clear();
+    struct pbuf *p = pbuf_alloc(PBUF_TRANSPORT, len, PBUF_RAM);
+    if (!p) {
+      printf("Failed to allocate buffer\n");
+      udp_remove(pcb);
+      return;
+    }
+    memcpy(p->payload, buffer, len);
 
+    udp_sendto(pcb, p, &broadcast_addr, 3333);
+    pbuf_free(p);
     sleep_ms(500);
   }
 }
 
 App::~App() {
-  if (client) {
-    delete client;
-  }
   cyw43_arch_deinit();
 }
 

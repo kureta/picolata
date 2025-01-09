@@ -7,8 +7,8 @@ int main() {
   App app(target, port);
 
   if (app.initialize()) {
-    app.run();
+    return 0;
   }
 
-  return 0;
+  return -1;
 }
