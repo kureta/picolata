@@ -38,15 +38,8 @@ void App::run() {
 
   // declare a buffer for writing the OSC packet into
   char buffer[1024];
-
-  // write the OSC packet to the buffer
-  // returns the number of bytes written to the buffer, negative on error
-  // note that tosc_write will clear the entire buffer before writing to it
-  int len = tosc_writeMessage(
-      buffer, sizeof(buffer),
-      "/ping", // the address
-      "fsi",   // the format; 'f':32-bit float, 's':ascii string, 'i':32-bit integer
-      1.0f, "hello", 2);
+  // tinyOSC instance
+  TinyOSC tiny_osc;
 
   // send the data out of the socket
   // Create a new UDP protocol control block
@@ -67,6 +60,15 @@ void App::run() {
       udp_remove(pcb);
       return;
     }
+
+    // write the OSC packet to the buffer
+    // returns the number of bytes written to the buffer, negative on error
+    // note that tosc_write will clear the entire buffer before writing to it
+    const unsigned int len = tiny_osc.writeMessage(
+        buffer, sizeof(buffer),
+        "/ping", // the address
+        "fsi",   // the format; 'f':32-bit float, 's':ascii string, 'i':32-bit integer
+        1.0f, "hello", 2);
 
     struct pbuf *p = pbuf_alloc(PBUF_TRANSPORT, len, PBUF_RAM);
     if (!p) {

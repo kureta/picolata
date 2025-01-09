@@ -1,8 +1,7 @@
 #ifndef APP_HPP
 #define APP_HPP
 
-// #include "PicoOSC.hpp"
-#include "tinyosc.h"
+#include "../tinyosc/tinyosc.hpp"
 
 class App {
 public:

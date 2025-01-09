@@ -15,15 +15,10 @@
  */
 
 #include <stddef.h>
-#include <stdarg.h>
 #include <string.h>
 #include <stdio.h>
-
 #include <lwip/inet.h>
-#define tosc_strncpy(_dst, _src, _len) strncpy(_dst, _src, _len)
-
-
-#include <stdint.h>  // Include the C-style header for integer types
+#include "tinyosc.hpp"
 
 uint64_t htonll(uint64_t value) {
   return ((value & 0xFF00000000000000ULL) >> 56) |
@@ -40,12 +35,12 @@ uint64_t ntohll(uint64_t value) {
   return htonll(value);  // Since the operation is symmetrical, use the same implementation
 }
 
-#include "tinyosc.h"
-
 #define BUNDLE_ID 0x2362756E646C6500L // "#bundle"
 
+TinyOSC::TinyOSC() {}
+
 // http://opensoundcontrol.org/spec-1_0
-int tosc_parseMessage(tosc_message *o, char *buffer, const int len) {
+int TinyOSC::parseMessage(message *o, char *buffer, const int len) {
   // NOTE(mhroth): if there's a comma in the address, that's weird
   int i = 0;
   while (buffer[i] != '\0') ++i; // find the null-terimated address
@@ -67,76 +62,76 @@ int tosc_parseMessage(tosc_message *o, char *buffer, const int len) {
 }
 
 // check if first eight bytes are '#bundle '
-bool tosc_isBundle(const char *buffer) {
+bool TinyOSC::isBundle(const char *buffer) {
   return ((*(const int64_t *) buffer) == htonll(BUNDLE_ID));
 }
 
-void tosc_parseBundle(tosc_bundle *b, char *buffer, const int len) {
+void TinyOSC::parseBundle(bundle *b, char *buffer, const int len) {
   b->buffer = (char *) buffer;
   b->marker = buffer + 16; // move past '#bundle ' and timetag fields
   b->bufLen = len;
   b->bundleLen = len;
 }
 
-uint64_t tosc_getTimetag(tosc_bundle *b) {
+uint64_t TinyOSC::getTimetag(bundle *b) {
   return ntohll(*((uint64_t *) (b->buffer+8)));
 }
 
-uint32_t tosc_getBundleLength(tosc_bundle *b) {
+uint32_t TinyOSC::getBundleLength(bundle *b) {
   return b->bundleLen;
 }
 
-bool tosc_getNextMessage(tosc_bundle *b, tosc_message *o) {
+bool TinyOSC::getNextMessage(bundle *b, message *o) {
   if ((b->marker - b->buffer) >= b->bundleLen) return false;
   uint32_t len = (uint32_t) ntohl(*((int32_t *) b->marker));
-  tosc_parseMessage(o, b->marker+4, len);
+  parseMessage(o, b->marker+4, len);
   b->marker += (4 + len); // move marker to next bundle element
   return true;
 }
 
-char *tosc_getAddress(tosc_message *o) {
+char *TinyOSC::getAddress(message *o) {
   return o->buffer;
 }
 
-char *tosc_getFormat(tosc_message *o) {
+char *TinyOSC::getFormat(message *o) {
   return o->format;
 }
 
-uint32_t tosc_getLength(tosc_message *o) {
+uint32_t TinyOSC::getLength(message *o) {
   return o->len;
 }
 
-int32_t tosc_getNextInt32(tosc_message *o) {
+int32_t TinyOSC::getNextInt32(message *o) {
   // convert from big-endian (network btye order)
   const int32_t i = (int32_t) ntohl(*((uint32_t *) o->marker));
   o->marker += 4;
   return i;
 }
 
-int64_t tosc_getNextInt64(tosc_message *o) {
+int64_t TinyOSC::getNextInt64(message *o) {
   const int64_t i = (int64_t) ntohll(*((uint64_t *) o->marker));
   o->marker += 8;
   return i;
 }
 
-uint64_t tosc_getNextTimetag(tosc_message *o) {
-  return (uint64_t) tosc_getNextInt64(o);
+uint64_t TinyOSC::getNextTimetag(message *o) {
+  return (uint64_t) getNextInt64(o);
 }
 
-float tosc_getNextFloat(tosc_message *o) {
+float TinyOSC::getNextFloat(message *o) {
   // convert from big-endian (network btye order)
   const uint32_t i = ntohl(*((uint32_t *) o->marker));
   o->marker += 4;
   return *((float *) (&i));
 }
 
-double tosc_getNextDouble(tosc_message *o) {
+double TinyOSC::getNextDouble(message *o) {
   const uint64_t i = ntohll(*((uint64_t *) o->marker));
   o->marker += 8;
   return *((double *) (&i));
 }
 
-const char *tosc_getNextString(tosc_message *o) {
+const char *TinyOSC::getNextString(message *o) {
   int i = (int) strlen(o->marker);
   if (o->marker + i >= o->buffer + o->len) return NULL;
   const char *s = o->marker;
@@ -145,7 +140,7 @@ const char *tosc_getNextString(tosc_message *o) {
   return s;
 }
 
-void tosc_getNextBlob(tosc_message *o, const char **buffer, int *len) {
+void TinyOSC::getNextBlob(message *o, const char **buffer, int *len) {
   int i = (int) ntohl(*((uint32_t *) o->marker)); // get the blob length
   if (o->marker + 4 + i <= o->buffer + o->len) {
     *len = i; // length of blob
@@ -158,13 +153,13 @@ void tosc_getNextBlob(tosc_message *o, const char **buffer, int *len) {
   }
 }
 
-unsigned char *tosc_getNextMidi(tosc_message *o) {
+unsigned char *getNextMidi(message *o) {
   unsigned char *m = (unsigned char *) o->marker;
   o->marker += 4;
   return m;
 }
 
-tosc_message *tosc_reset(tosc_message *o) {
+message *TinyOSC::reset(message *o) {
   int i = 0;
   while (o->format[i] != '\0') ++i;
   i = (i + 4) & ~0x3; // advance to the next multiple of 4 after trailing '\0'
@@ -172,7 +167,7 @@ tosc_message *tosc_reset(tosc_message *o) {
   return o;
 }
 
-void tosc_writeBundle(tosc_bundle *b, uint64_t timetag, char *buffer, const int len) {
+void TinyOSC::writeBundle(bundle *b, uint64_t timetag, char *buffer, const int len) {
   *((uint64_t *) buffer) = htonll(BUNDLE_ID);
   *((uint64_t *) (buffer + 8)) = htonll(timetag);
 
@@ -183,17 +178,17 @@ void tosc_writeBundle(tosc_bundle *b, uint64_t timetag, char *buffer, const int 
 }
 
 // always writes a multiple of 4 bytes
-static uint32_t tosc_vwrite(char *buffer, const int len,
+uint32_t TinyOSC::vwrite(char *buffer, const int len,
     const char *address, const char *format, va_list ap) {
   memset(buffer, 0, len); // clear the buffer
   uint32_t i = (uint32_t) strlen(address);
   if (address == NULL || i >= len) return -1;
-  tosc_strncpy(buffer, address, len);
+  strncpy(buffer, address, len);
   i = (i + 4) & ~0x3;
   buffer[i++] = ',';
   int s_len = (int) strlen(format);
   if (format == NULL || (i + s_len) >= len) return -2;
-  tosc_strncpy(buffer+i, format, len-i-s_len);
+  strncpy(buffer+i, format, len-i-s_len);
   i = (i + 4 + s_len) & ~0x3;
 
   for (int j = 0; format[j] != '\0'; ++j) {
@@ -247,7 +242,7 @@ static uint32_t tosc_vwrite(char *buffer, const int len,
         const char *str = (const char *) va_arg(ap, void *);
         s_len = (int) strlen(str);
         if (i + s_len >= len) return -3;
-        tosc_strncpy(buffer+i, str, len-i-s_len);
+        strncpy(buffer+i, str, len-i-s_len);
         i = (i + 4 + s_len) & ~0x3;
         break;
       }
@@ -263,12 +258,12 @@ static uint32_t tosc_vwrite(char *buffer, const int len,
   return i; // return the total number of bytes written
 }
 
-uint32_t tosc_writeNextMessage(tosc_bundle *b,
+uint32_t TinyOSC::writeNextMessage(bundle *b,
     const char *address, const char *format, ...) {
   va_list ap;
   va_start(ap, format);
   if (b->bundleLen >= b->bufLen) return 0;
-  const uint32_t i = tosc_vwrite(
+  const uint32_t i = vwrite(
       b->marker+4, b->bufLen-b->bundleLen-4, address, format, ap);
   va_end(ap);
   *((uint32_t *) b->marker) = htonl(i); // write the length of the message
@@ -277,51 +272,51 @@ uint32_t tosc_writeNextMessage(tosc_bundle *b,
   return i;
 }
 
-uint32_t tosc_writeMessage(char *buffer, const int len,
+uint32_t TinyOSC::writeMessage(char *buffer, const int len,
     const char *address, const char *format, ...) {
   va_list ap;
   va_start(ap, format);
-  const uint32_t i = tosc_vwrite(buffer, len, address, format, ap);
+  const uint32_t i = TinyOSC::vwrite(buffer, len, address, format, ap);
   va_end(ap);
   return i; // return the total number of bytes written
 }
 
-void tosc_printOscBuffer(char *buffer, const int len) {
+void TinyOSC::printOscBuffer(char *buffer, const int len) {
   // parse the buffer contents (the raw OSC bytes)
   // a return value of 0 indicates no error
-  tosc_message m;
-  const int err = tosc_parseMessage(&m, buffer, len);
-  if (err == 0) tosc_printMessage(&m);
+  message m;
+  const int err = parseMessage(&m, buffer, len);
+  if (err == 0) printMessage(&m);
   else printf("Error while reading OSC buffer: %i\n", err);
 }
 
-void tosc_printMessage(tosc_message *osc) {
+void TinyOSC::printMessage(message *osc) {
   printf("[%i bytes] %s %s",
       osc->len, // the number of bytes in the OSC message
-      tosc_getAddress(osc), // the OSC address string, e.g. "/button1"
-      tosc_getFormat(osc)); // the OSC format string, e.g. "f"
+      getAddress(osc), // the OSC address string, e.g. "/button1"
+      getFormat(osc)); // the OSC format string, e.g. "f"
 
   for (int i = 0; osc->format[i] != '\0'; i++) {
     switch (osc->format[i]) {
       case 'b': {
         const char *b = NULL; // will point to binary data
         int n = 0; // takes the length of the blob
-        tosc_getNextBlob(osc, &b, &n);
+        getNextBlob(osc, &b, &n);
         printf(" [%i]", n); // print length of blob
         for (int j = 0; j < n; ++j) printf("%02X", b[j] & 0xFF); // print blob bytes
         break;
       }
       case 'm': {
-        unsigned char *m = tosc_getNextMidi(osc);
+        unsigned char *m = getNextMidi(osc);
         printf(" 0x%02X%02X%02X%02X", m[0], m[1], m[2], m[3]);
         break;
       }
-      case 'f': printf(" %g", tosc_getNextFloat(osc)); break;
-      case 'd': printf(" %g", tosc_getNextDouble(osc)); break;
-      case 'i': printf(" %d", tosc_getNextInt32(osc)); break;
-      case 'h': printf(" %lld", tosc_getNextInt64(osc)); break;
-      case 't': printf(" %lld", tosc_getNextTimetag(osc)); break;
-      case 's': printf(" %s", tosc_getNextString(osc)); break;
+      case 'f': printf(" %g", getNextFloat(osc)); break;
+      case 'd': printf(" %g", getNextDouble(osc)); break;
+      case 'i': printf(" %d", getNextInt32(osc)); break;
+      case 'h': printf(" %lld", getNextInt64(osc)); break;
+      case 't': printf(" %lld", getNextTimetag(osc)); break;
+      case 's': printf(" %s", getNextString(osc)); break;
       case 'F': printf(" false"); break;
       case 'I': printf(" inf"); break;
       case 'N': printf(" nil"); break;
