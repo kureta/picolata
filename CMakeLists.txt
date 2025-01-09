@@ -13,7 +13,15 @@ set(CMAKE_CXX_STANDARD 17)
 pico_sdk_init()
 
 # ======= define targets =======
-add_executable(${CMAKE_PROJECT_NAME} src/main.cpp src/app/app.cpp src/tinyosc/tinyosc.cpp)
+add_compile_definitions(WIFI_SSID="$ENV{WIFI_SSID}")
+add_compile_definitions(WIFI_PASS="$ENV{WIFI_PASS}")
+
+add_executable(
+    ${CMAKE_PROJECT_NAME}
+    src/main.cpp
+    src/app/app.cpp
+    src/tinyosc/tinyosc.cpp
+)
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE src/include src)
 
@@ -21,10 +29,8 @@ target_link_libraries(
     ${CMAKE_PROJECT_NAME}
     pico_stdlib
     pico_cyw43_arch_lwip_threadsafe_background
+    hardware_adc
 )
-
-add_compile_definitions(WIFI_SSID="$ENV{WIFI_SSID}")
-add_compile_definitions(WIFI_PASS="$ENV{WIFI_PASS}")
 
 pico_enable_stdio_usb(${CMAKE_PROJECT_NAME} 1)
 pico_enable_stdio_uart(${CMAKE_PROJECT_NAME} 0)
