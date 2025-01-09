@@ -1,8 +1,9 @@
 #include "app.hpp"
+#include "hardware/adc.h"
+#include "lwip/ip_addr.h"
+#include "lwip/udp.h"
 #include "pico/cyw43_arch.h"
 #include "pico/stdlib.h" // IWYU pragma: keep
-#include "lwip/udp.h"
-#include "lwip/ip_addr.h"
 
 // TODO: Separate network and OSC logic
 App::App(const char *target, const uint16_t port)
@@ -13,6 +14,13 @@ bool App::initialize() {
   sleep_ms(1000);
   printf("Initializing Wi-Fi...\n");
 
+  adc_init();
+
+  // Make sure GPIO is high-impedance, no pullups etc
+  adc_gpio_init(26);
+  // Select ADC input 0 (GPIO26)
+  adc_select_input(0);
+
   if (cyw43_arch_init()) {
     printf("Failed to initialise!\n");
     return false;
@@ -22,7 +30,7 @@ bool App::initialize() {
   struct netif *netif = &cyw43_state.netif[CYW43_ITF_STA];
   netif_set_status_callback(netif, netif_status_callback);
 
-  printf("Connecting to Wi-Fi...\n");
+  printf("Connecting to %s...\n", WIFI_SSID);
   if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASS,
                                          CYW43_AUTH_WPA2_AES_PSK, 30000)) {
     printf("Failed to connect!\n");
@@ -51,9 +59,14 @@ void App::run() {
 
   // Prepare the broadcast IP address
   ip_addr_t broadcast_addr;
-  IP4_ADDR(&broadcast_addr, 255, 255, 255, 255);  // Adjust to your subnet
+  IP4_ADDR(&broadcast_addr, 255, 255, 255, 255); // Adjust to your subnet
 
   while (true) {
+    const float conversion_factor = 1.0f / (1 << 12);
+    uint16_t result = adc_read();
+    printf("Raw value: 0x%03x, voltage: %f V\n", result,
+           result * conversion_factor);
+    float value = result * conversion_factor;
     // Bind PCB to a port (e.g., 12345)
     if (udp_bind(pcb, IP_ADDR_ANY, 3333) != ERR_OK) {
       printf("Bind failed\n");
@@ -65,10 +78,7 @@ void App::run() {
     // returns the number of bytes written to the buffer, negative on error
     // note that tosc_write will clear the entire buffer before writing to it
     const unsigned int len = tiny_osc.writeMessage(
-        buffer, sizeof(buffer),
-        "/ping", // the address
-        "fsi",   // the format; 'f':32-bit float, 's':ascii string, 'i':32-bit integer
-        1.0f, "hello", 2);
+        buffer, sizeof(buffer), "/ping", "fsi", value, "hello", 7);
 
     struct pbuf *p = pbuf_alloc(PBUF_TRANSPORT, len, PBUF_RAM);
     if (!p) {
@@ -80,13 +90,11 @@ void App::run() {
 
     udp_sendto(pcb, p, &broadcast_addr, 3333);
     pbuf_free(p);
-    sleep_ms(500);
+    sleep_ms(5);
   }
 }
 
-App::~App() {
-  cyw43_arch_deinit();
-}
+App::~App() { cyw43_arch_deinit(); }
 
 void App::netif_status_callback(struct netif *netif) {
   if (netif_is_up(netif) && !ip4_addr_isany_val(*netif_ip4_addr(netif))) {
