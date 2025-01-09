@@ -13,7 +13,6 @@ ADC::ADC() {
 float ADC::get_value() {
   uint16_t result = adc_read();
   float value = result * conversion_factor;
-  printf("Raw value: 0x%03x, voltage: %f V\n", result, value);
 
   return value;
 }
