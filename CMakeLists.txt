@@ -16,14 +16,12 @@ pico_sdk_init()
 add_compile_definitions(WIFI_SSID="$ENV{WIFI_SSID}")
 add_compile_definitions(WIFI_PASS="$ENV{WIFI_PASS}")
 
-add_executable(
-    ${CMAKE_PROJECT_NAME}
-    src/main.cpp
-    src/app/app.cpp
-    src/tinyosc/tinyosc.cpp
-)
+set(SOURCE_DIR "${CMAKE_SOURCE_DIR}/picolata")
+file(GLOB SOURCE_FILES "${SOURCE_DIR}/src/*.cpp")
 
-target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE src/include src)
+add_executable(${CMAKE_PROJECT_NAME} ${SOURCE_DIR}/main.cpp ${SOURCE_FILES})
+
+target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${SOURCE_DIR}/include)
 
 target_link_libraries(
     ${CMAKE_PROJECT_NAME}

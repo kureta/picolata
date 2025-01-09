@@ -1,7 +1,5 @@
 #include "tinyosc.hpp"
 #include <lwip/inet.h>
-#include <stddef.h>
-#include <stdio.h>
 #include <string.h>
 
 uint64_t htonll(uint64_t value) {
