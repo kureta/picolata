@@ -30,10 +30,27 @@ int main() {
 
   // App start
   printf("Entering main loop.");
+  // Set the desired loop frequency (n times per second)
+  const int n = 120;                // for example, 10Hz
+  const int interval_ms = 1000 / n; // Convert frequency to milliseconds
   while (true) {
+    // Record the start time
+    uint32_t start_time = to_ms_since_boot(get_absolute_time());
+
+    // Your main loop code goes here
     osc.writeMessage(buffer, sizeof(buffer), "/ping", "f", adc.get_value());
     Network::send(buffer, dest_addr, port);
-    sleep_ms(500);
+
+    // Calculate elapsed time
+    uint32_t elapsed_time = to_ms_since_boot(get_absolute_time()) - start_time;
+
+    // Check if the loop overran
+    if (elapsed_time > interval_ms) {
+      printf("overrun\n");
+    } else {
+      // Sleep until the next loop cycle
+      sleep_ms(interval_ms - elapsed_time);
+    }
   }
 
   printf("Exiting");
