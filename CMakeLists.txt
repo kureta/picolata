@@ -2,6 +2,14 @@ cmake_minimum_required(VERSION 3.17)
 
 # ====== set board and import pico-sdk ======
 set(PICO_BOARD pico_w)
+
+# initialize pico-sdk from GIT
+# (note this can come from environment, CMake cache etc)
+set(PICO_SDK_FETCH_FROM_GIT on)
+set(PICO_SDK_FETCH_FROM_GIT_TAG 2.1.0)
+
+# pico_sdk_import.cmake is a single file copied from this SDK
+# note: this must happen before project()
 include(cmake/pico_sdk_import.cmake)
 
 # ======= define project ======
