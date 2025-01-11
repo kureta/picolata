@@ -44,6 +44,7 @@ target_link_libraries(
     pico_stdlib
     pico_cyw43_arch_lwip_threadsafe_background
     hardware_adc
+    hardware_i2c
 )
 
 pico_enable_stdio_usb(${CMAKE_PROJECT_NAME} 1)

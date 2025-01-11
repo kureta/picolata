@@ -2,17 +2,19 @@
 #include <hardware/adc.h>
 #include <pico/cyw43_arch.h>
 
-ADC::ADC() {
+#define LED_PIN 26
+
+void ADC::initialize() {
   adc_init();
   // Make sure GPIO is high-impedance, no pullups etc
-  adc_gpio_init(26);
+  adc_gpio_init(LED_PIN);
   // Select ADC input 0 (GPIO26)
   adc_select_input(0);
 }
 
-float ADC::get_value() {
-  uint16_t result = adc_read();
-  float value = result * conversion_factor;
+float ADC::getValue() {
+  uint16_t Result = adc_read();
+  float Value = static_cast<float>(Result) / ADC_RESOLUTION;
 
-  return value;
+  return Value;
 }

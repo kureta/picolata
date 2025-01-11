@@ -1,14 +1,13 @@
 #ifndef POT_HPP
 #define POT_HPP
 
+#define ADC_RESOLUTION 4096
+
 class ADC {
 public:
-  ADC();
-  ~ADC() = default;
-  float get_value();
-
-private:
-  const float conversion_factor = 1.0f / (1 << 12);
+  ADC() = delete;
+  static void initialize();
+  static float getValue();
 };
 
 #endif // POT_HPP

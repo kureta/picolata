@@ -1,49 +1,53 @@
 #include "network.hpp"
+#include <iostream>
 #include <lwip/ip_addr.h>
 #include <lwip/pbuf.h>
 #include <pico/cyw43_arch.h>
 #include <pico/stdlib.h> // IWYU pragma: keep
+#include <sys/_types.h>
 
-#define BUFFER_LENGTH 1024
+#define CONNECTION_TIMEOUT 10000
+#define BIND_PORT 3333
 
-struct udp_pcb *Network::pcb = nullptr;
+struct udp_pcb *Network::PCB = nullptr;
 
-bool Network::connect_wifi() {
-  printf("Initializing Wi-Fi...\n");
+// TODO: move send logic into a different class (maybe Socket)
+bool Network::connectWifi() {
+  std::cout << "Initializing Wi-Fi...\n";
 
-  if (cyw43_arch_init()) {
-    printf("Failed to initialize!\n");
+  if (cyw43_arch_init() != 0) {
+    std::cout << "Failed to initialize!\n";
     return false;
   }
   // Enable Wi-Fi Station mode
   cyw43_arch_enable_sta_mode();
   // Set up a network status callback
-  struct netif *netif = &cyw43_state.netif[CYW43_ITF_STA];
-  netif_set_status_callback(netif, netif_status_callback);
+  struct netif *Netif = &cyw43_state.netif[CYW43_ITF_STA];
+  netif_set_status_callback(Netif, netifStatusCallback);
 
-  printf("Connecting to %s...\n", WIFI_SSID);
+  std::cout << "Connecting to " << WIFI_SSID << "...\n";
   if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASS,
-                                         CYW43_AUTH_WPA2_AES_PSK, 30000)) {
-    printf("Failed to connect!\n");
+                                         CYW43_AUTH_WPA2_AES_PSK,
+                                         CONNECTION_TIMEOUT) != 0) {
+    std::cout << "Failed to connect!\n";
     return false;
-  } else {
-    printf("Connected.\n");
-    return true;
   }
+  std::cout << "Connected.\n";
+  return true;
 }
 
-bool Network::setup_udp() {
+bool Network::setupUdp() {
   // Create a new UDP protocol control block
-  pcb = udp_new();
-  if (!pcb) {
-    printf("Could not create PCB\n");
+  PCB = udp_new();
+  if (PCB == nullptr) {
+    std::cout << "Could not create PCB\n";
     return false;
   }
 
   // Bind PCB to a port (e.g., 12345)
-  if (udp_bind(pcb, IP_ADDR_ANY, 3333) != ERR_OK) {
-    printf("Bind failed\n");
-    udp_remove(pcb);
+  if (udp_bind(PCB, IP_ADDR_ANY, BIND_PORT) != ERR_OK) {
+    std::cout << "Bind failed\n";
+    udp_remove(PCB);
     return false;
   }
 
@@ -51,11 +55,11 @@ bool Network::setup_udp() {
 }
 
 bool Network::initialize() {
-  if (!Network::connect_wifi()) {
+  if (!Network::connectWifi()) {
     return false;
   }
 
-  if (!Network::setup_udp()) {
+  if (!Network::setupUdp()) {
     return false;
   };
 
@@ -63,45 +67,42 @@ bool Network::initialize() {
 }
 
 void Network::deinitialize() {
-  udp_remove(pcb);
+  udp_remove(PCB);
   cyw43_arch_deinit();
 }
 
-bool Network::send(const char *message, const char *dest_addr,
-                   const unsigned int port) {
-  // Start
-  const unsigned int len = strlen(message) * sizeof(message);
-
+bool Network::send(const char *message, std::string &destAddr,
+                   unsigned int port, const unsigned int Len) {
   // Parse address
-  ip_addr_t broadcast_addr;
-  ipaddr_aton(dest_addr, &broadcast_addr);
+  ip_addr_t BroadcastAddr;
+  ipaddr_aton(destAddr.c_str(), &BroadcastAddr);
 
   // Setup Protocol Buffer
-  struct pbuf *p = pbuf_alloc(PBUF_TRANSPORT, len, PBUF_RAM);
-  if (!p) {
-    printf("Failed to allocate buffer\n");
+  struct pbuf *PBuf = pbuf_alloc(PBUF_TRANSPORT, Len, PBUF_RAM);
+  if (PBuf == nullptr) {
+    std::cout << "Failed to allocate buffer\n";
     return false;
   }
 
   // Copy message into pbuff
-  memcpy(p->payload, message, len);
+  memcpy(PBuf->payload, message, Len);
 
   // Send pbuff via UDP
-  udp_sendto(pcb, p, &broadcast_addr, port);
+  udp_sendto(PCB, PBuf, &BroadcastAddr, port);
 
   // Free pbuf
-  pbuf_free(p);
+  pbuf_free(PBuf);
 
   return true;
 }
 
-void Network::netif_status_callback(struct netif *netif) {
+void Network::netifStatusCallback(struct netif *netif) {
   if (netif_is_up(netif) && !ip4_addr_isany_val(*netif_ip4_addr(netif))) {
-    printf("Network is up\n");
-    printf("IP Address: %s\n", ip4addr_ntoa(netif_ip4_addr(netif)));
+    std::cout << "Network is up\n";
+    std::cout << "IP Address: " << ip4addr_ntoa(netif_ip4_addr(netif)) << "\n";
   } else {
-    printf("Network is down\n");
-    printf("Trying to reconnect in 3 seconds...");
+    std::cout << "Network is down\n";
+    std::cout << "Trying to reconnect in 3 seconds...\n";
     Network::initialize();
   }
 }
