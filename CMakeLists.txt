@@ -16,7 +16,7 @@ include(cmake/pico_sdk_import.cmake)
 project(picolata C CXX)
 
 # Temporary hack for clangd
-add_compile_definitions(_LIBCPP_HAS_THREAD_API_EXTERNAL=1)
+add_compile_definitions(_LIBCPP_HAS_THREAD_API_PTHREAD=1)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 23)
