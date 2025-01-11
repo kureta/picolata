@@ -14,16 +14,24 @@ include(cmake/pico_sdk_import.cmake)
 
 # ======= define project ======
 project(picolata C CXX)
+
+# Temporary hack for clangd
+add_compile_definitions(_LIBCPP_HAS_THREAD_API_EXTERNAL=1)
+
 set(CMAKE_C_STANDARD 11)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_SYSROOT /usr/arm-none-eabi)
+set(CMAKE_C_COMPILER /usr/bin/arm-none-eabi-gcc)
+set(CMAKE_CXX_COMPILER /usr/bin/arm-none-eabi-g++)
 
 # initialize the Raspberry Pi Pico SDK
 pico_sdk_init()
 
-# ======= define targets =======
+# ====== Inject secrets ======
 add_compile_definitions(WIFI_SSID="$ENV{WIFI_SSID}")
 add_compile_definitions(WIFI_PASS="$ENV{WIFI_PASS}")
 
+# ======= define targets =======
 set(SOURCE_DIR "${CMAKE_SOURCE_DIR}/picolata")
 file(GLOB SOURCE_FILES "${SOURCE_DIR}/src/*.cpp")
 
