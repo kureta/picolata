@@ -3,3 +3,40 @@ CompileFlags:
     - "-I/usr/arm-none-eabi/include/c++/14.2.0/arm-none-eabi/"
     - "-I/usr/arm-none-eabi/include/c++/14.2.0/"
     - "-I/usr/arm-none-eabi/include/"
+
+Diagnostics:
+  ClangTidy:
+    Remove:
+      - modernize-use-trailing-return-type
+      - google-readability-todo
+    Add:
+      - bugprone-*
+      - cppcoreguidelines-*
+      - google-*
+      - linuxkernel-*
+      - llvm-*
+      - misc-*
+      - modernize-*
+      - performance-*
+      - portability-*
+      - readability-*
+    CheckOptions:
+      readability-identifier-naming.VariableCase: CamelCase
+      readability-identifier-naming.ClassCase: CamelCase
+      readability-identifier-naming.ClassConstantCase: CamelCase
+      readability-identifier-naming.ClassConstantPrefix: k
+      readability-identifier-naming.GlobalConstantCase: CamelCase
+      readability-identifier-naming.GlobalConstantPrefix: k
+      readability-identifier-naming.GlobalConstantPointerCase: CamelCase
+      readability-identifier-naming.GlobalConstantPointerPrefix: k
+      readability-identifier-naming.StaticConstantCase: CamelCase
+      readability-identifier-naming.StaticConstantPrefix: k
+      readability-identifier-naming.MemberCase: CamelCase
+      readability-identifier-naming.MemberPrefix: m
+      readability-identifier-naming.FunctionCase: camelBack
+      readability-identifier-naming.MethodCase: camelBack
+      readability-identifier-naming.ParameterCase: camelBack
+      readability-identifier-naming.TemplateParameterCase: CamelCase
+      readability-identifier-naming.TypeAliasCase: CamelCase
+      readability-identifier-naming.TypedefCase: CamelCase
+      readability-identifier-naming.UnionCase: CamelCase
