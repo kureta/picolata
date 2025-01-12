@@ -3,7 +3,9 @@
 ## Debugging
 
 - install `arm-none-eabi-gdb` and `openocd`
-- run `openocd -f /usr/share/openocd/scripts/interface/cmsis-dap.cfg -f /usr/share/openocd/scripts/target/rp2040.cfg -c "adapter speed 5000" -s /usr/share/openocd/scripts/`
+- run `openocd -f /usr/share/openocd/scripts/interface/cmsis-dap.cfg
+-f /usr/share/openocd/scripts/target/rp2040.cfg -c "adapter speed 5000"
+-s /usr/share/openocd/scripts/`
 - in another window, run `gdb out/Debug/picolata.elf`
 - in `gdb`, run these commands:
 
@@ -14,5 +16,7 @@
   b main
   c
   ```
+
+  Using `--eval-command load` for `nvim-dap` breaks it for some reason. You have to manually type `load` to `dap` `repl` for breakpoints to work.
 
   Good luck!
