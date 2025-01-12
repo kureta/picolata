@@ -33,7 +33,7 @@ add_compile_definitions(WIFI_PASS="$ENV{WIFI_PASS}")
 
 # ======= define targets =======
 set(SOURCE_DIR "${CMAKE_SOURCE_DIR}/picolata")
-file(GLOB SOURCE_FILES "${SOURCE_DIR}/src/*.cpp")
+file(GLOB SOURCE_FILES "${SOURCE_DIR}/src/*.cpp" "${SOURCE_DIR}/src/*.c")
 
 add_executable(${CMAKE_PROJECT_NAME} ${SOURCE_DIR}/main.cpp ${SOURCE_FILES})
 
@@ -45,6 +45,8 @@ target_link_libraries(
     pico_cyw43_arch_lwip_threadsafe_background
     hardware_adc
     hardware_i2c
+    tinyusb_device
+    tinyusb_board
 )
 
 pico_enable_stdio_usb(${CMAKE_PROJECT_NAME} 0)
