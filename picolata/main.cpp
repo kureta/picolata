@@ -72,7 +72,6 @@ int main() {
         OscBuilder::makeOscPacket("/accel", accel_g[0], accel_g[1], accel_g[2]);
     Network::send(Buffer.data(), DestAddr, Port, Buffer.size());
 
-    Network::send(Buffer.data(), DestAddr, Port, Buffer.size());
     Buffer.clear();
     Buffer = OscBuilder::makeOscPacket("/gyro", gyro_dps[0], gyro_dps[1],
                                        gyro_dps[2]);
