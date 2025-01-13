@@ -1,6 +1,7 @@
 #ifndef INCLUDE_APPLICATION_HPP_
 #define INCLUDE_APPLICATION_HPP_
 
+#include "adc.hpp"
 #include "modernosc.hpp"
 #include <cstdint>
 #include <memory>
@@ -14,6 +15,7 @@ public:
 private:
   unsigned int mUpdateRate;
   std::unique_ptr<OscBuilder> mOSC;
+  ADC mAdc;
 };
 
 #endif // INCLUDE_APPLICATION_HPP_

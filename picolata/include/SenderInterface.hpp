@@ -5,12 +5,17 @@
 
 class SenderInterface {
 public:
+  // Don't *totally* know why these are necessary
   SenderInterface() = default;
+  virtual ~SenderInterface() = default;
+
+  // Don't know why these are necessary. Shut up `clang-tidy`
   SenderInterface(const SenderInterface &) = delete;
   SenderInterface(SenderInterface &&) = delete;
-  SenderInterface &operator=(const SenderInterface &) = default;
+  SenderInterface &operator=(const SenderInterface &) = delete;
   SenderInterface &operator=(SenderInterface &&) = delete;
-  virtual ~SenderInterface() = default;
+
+  // This is the only thing we need the interface to have.
   virtual bool send(std::vector<char> &data) = 0;
 };
 

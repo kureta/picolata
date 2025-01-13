@@ -1,15 +1,18 @@
 #include "adc.hpp"
+#include <array>
 #include <hardware/adc.h>
 #include <pico/cyw43_arch.h>
 
-#define LED_PIN 26
+const std::array<int, 3> ADC::kAdcToGpio = {26, 27, 28};
 
-void ADC::initialize() {
+ADC::ADC(int adcIndex) : mAdcIndex(adcIndex) {
+  // Initialize ADC
   adc_init();
+
   // Make sure GPIO is high-impedance, no pullups etc
-  adc_gpio_init(LED_PIN);
-  // Select ADC input 0 (GPIO26)
-  adc_select_input(0);
+  adc_gpio_init(kAdcToGpio.at(mAdcIndex));
+  // Select ADC input `mAdcIndex`
+  adc_select_input(mAdcIndex);
 }
 
 float ADC::getValue() {
