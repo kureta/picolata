@@ -35,11 +35,14 @@ void Application::update(uint32_t delta) {
   // refresh sensor value
   mMpu6050.update();
 
+  // Read acceleration data
   Vector3D<int16_t> Accel = mMpu6050.getAccel();
   mOSC->sendOSCMessage("/accel", Accel.mX, Accel.mY, Accel.mZ);
 
+  // Read gyroscope data
   Vector3D<int16_t> Gyro = mMpu6050.getGyro();
   mOSC->sendOSCMessage("/gyro", Gyro.mX, Gyro.mY, Gyro.mZ);
 
+  // Read temperature data
   mOSC->sendOSCMessage("/temp", mMpu6050.getTemp());
 }
