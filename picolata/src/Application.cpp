@@ -18,7 +18,7 @@ Application::Application() : mUpdateRate(UPDATE_RATE), mAdc(ADC_PIN) {
     std::cout << "Failed to initialize!\n";
   }
 
-  // Create UDP sender
+  // Create OSC sender
   mOSC = std::make_unique<OscBuilder>(BROADCAST_IP, OSC_PORT);
 }
 

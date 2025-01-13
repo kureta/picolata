@@ -5,15 +5,17 @@
 
 class SenderInterface {
 public:
-  // Don't *totally* know why these are necessary
+  // Use defult constructor and destructor
   SenderInterface() = default;
   virtual ~SenderInterface() = default;
 
-  // Don't know why these are necessary. Shut up `clang-tidy`
+  // Deleted special member functions to prevent copying
   SenderInterface(const SenderInterface &) = delete;
-  SenderInterface(SenderInterface &&) = delete;
   SenderInterface &operator=(const SenderInterface &) = delete;
-  SenderInterface &operator=(SenderInterface &&) = delete;
+
+  // Use default move operations to allow transferring ownership
+  SenderInterface(SenderInterface &&) noexcept = delete;
+  SenderInterface &operator=(SenderInterface &&) noexcept = delete;
 
   // This is the only thing we need the interface to have.
   virtual bool send(std::vector<char> &data) = 0;
