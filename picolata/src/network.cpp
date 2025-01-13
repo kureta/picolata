@@ -7,9 +7,6 @@
 #include <sys/_types.h>
 
 #define CONNECTION_TIMEOUT 10000
-#define BIND_PORT 3333
-
-struct udp_pcb *Network::PCB = nullptr;
 
 // TODO: move send logic into a different class (maybe Socket)
 bool Network::connectWifi() {
@@ -36,65 +33,15 @@ bool Network::connectWifi() {
   return true;
 }
 
-bool Network::setupUdp() {
-  // Create a new UDP protocol control block
-  PCB = udp_new();
-  if (PCB == nullptr) {
-    std::cout << "Could not create PCB\n";
-    return false;
-  }
-
-  // Bind PCB to a port (e.g., 12345)
-  if (udp_bind(PCB, IP_ADDR_ANY, BIND_PORT) != ERR_OK) {
-    std::cout << "Bind failed\n";
-    udp_remove(PCB);
-    return false;
-  }
-
-  return true;
-}
-
 bool Network::initialize() {
   if (!Network::connectWifi()) {
-    return false;
-  }
-
-  if (!Network::setupUdp()) {
     return false;
   };
 
   return true;
 }
 
-void Network::deinitialize() {
-  udp_remove(PCB);
-  cyw43_arch_deinit();
-}
-
-bool Network::send(const char *message, std::string &destAddr,
-                   unsigned int port, const unsigned int Len) {
-  // Parse address
-  ip_addr_t BroadcastAddr;
-  ipaddr_aton(destAddr.c_str(), &BroadcastAddr);
-
-  // Setup Protocol Buffer
-  struct pbuf *PBuf = pbuf_alloc(PBUF_TRANSPORT, Len, PBUF_RAM);
-  if (PBuf == nullptr) {
-    std::cout << "Failed to allocate buffer\n";
-    return false;
-  }
-
-  // Copy message into pbuff
-  memcpy(PBuf->payload, message, Len);
-
-  // Send pbuff via UDP
-  udp_sendto(PCB, PBuf, &BroadcastAddr, port);
-
-  // Free pbuf
-  pbuf_free(PBuf);
-
-  return true;
-}
+void Network::deinitialize() { cyw43_arch_deinit(); }
 
 void Network::netifStatusCallback(struct netif *netif) {
   if (netif_is_up(netif) && !ip4_addr_isany_val(*netif_ip4_addr(netif))) {

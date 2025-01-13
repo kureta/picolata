@@ -17,6 +17,7 @@
   c
   ```
 
-  Using `--eval-command load` for `nvim-dap` breaks it for some reason. You have to manually type `load` to `dap` `repl` for breakpoints to work.
+  Using `--eval-command load` for `nvim-dap` breaks it for some reason.
+  You have to manually type `load` to `dap` `repl` for breakpoints to work.
 
   Good luck!

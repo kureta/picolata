@@ -1,4 +1,5 @@
 #include "modernosc.hpp"
+#include "UDPSender.hpp"
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -7,10 +8,12 @@
 #include <iostream>
 #include <lwip/def.h>
 #include <lwip/inet.h>
+#include <memory>
 #include <span>
 #include <string>
 #include <string_view>
 #include <tuple>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -94,6 +97,10 @@ OscParser::readFloat32(std::span<const char> data) {
   float Value = NAN;
   std::memcpy(&Value, &IntBits, sizeof(Value));
   return {Value, data.subspan(sizeof(float))};
+}
+
+OscBuilder::OscBuilder(const std::string &ipAddress, unsigned int port) {
+  mSender = std::make_unique<UDPSender>(ipAddress, port);
 }
 
 // Function to build an OSC packet from an OscMessage object

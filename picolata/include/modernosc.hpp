@@ -1,7 +1,9 @@
 #ifndef MODERN_OSC_HPP
 #define MODERN_OSC_HPP
 
+#include "SenderInterface.hpp"
 #include <cstdint>
+#include <memory>
 #include <span>
 #include <string>
 #include <variant>
@@ -39,8 +41,17 @@ private:
 
 class OscBuilder {
 public:
-  OscBuilder() = delete;
+  explicit OscBuilder(const std::string &ipAddress, unsigned int port);
 
+  // Function for directly building an OSC packet from address and arguments
+  template <typename... Args>
+  void sendOSCMessage(const std::string &address, Args &&...args) {
+    std::vector<char> Msg =
+        buildOscMessage(createOscMessage(address, std::forward<Args>(args)...));
+    mSender->send(Msg);
+  }
+
+private:
   // Function to create an OscMessage with any number of arguments
   template <typename... Args>
   static OscMessage createOscMessage(const std::string &address,
@@ -75,16 +86,9 @@ public:
 
   // Function to build an OSC packet from an OscMessage object
   static std::vector<char> buildOscMessage(const OscMessage &message);
+  // Sender must have a send method that accepts a buffer
+  std::unique_ptr<SenderInterface> mSender;
 
-  // Function for directly building an OSC packet from address and arguments
-  template <typename... Args>
-  static std::vector<char> makeOscPacket(const std::string &address,
-                                         Args &&...args) {
-    return buildOscMessage(
-        createOscMessage(address, std::forward<Args>(args)...));
-  }
-
-private:
   // Helper functions to convert various types to OscArgument
   static OscArgument toOscArgument(int value);
   static OscArgument toOscArgument(float value);
