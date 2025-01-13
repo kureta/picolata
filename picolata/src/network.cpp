@@ -8,7 +8,6 @@
 
 #define CONNECTION_TIMEOUT 10000
 
-// TODO: move send logic into a different class (maybe Socket)
 bool Network::connectWifi() {
   std::cout << "Initializing Wi-Fi...\n";
 

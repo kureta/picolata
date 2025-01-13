@@ -21,3 +21,8 @@
   You have to manually type `load` to `dap` `repl` for breakpoints to work.
 
   Good luck!
+
+## TODOs
+
+- [ ] Decide on one typing convention (`u_int8_t`, `uint8_t`, `unsigned short int`, etc.)
+- [ ] Fix sensor data retrieval and scaling

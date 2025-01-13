@@ -3,6 +3,7 @@
 
 #include "adc.hpp"
 #include "modernosc.hpp"
+#include "mpu6050.hpp"
 #include <cstdint>
 #include <memory>
 
@@ -16,6 +17,7 @@ private:
   unsigned int mUpdateRate;
   std::unique_ptr<OscBuilder> mOSC;
   ADC mAdc;
+  MPU6050 mMpu6050;
 };
 
 #endif // INCLUDE_APPLICATION_HPP_

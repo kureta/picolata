@@ -1,5 +1,8 @@
+#ifndef INCLUDE_MPU6050_HPP_
+#define INCLUDE_MPU6050_HPP_
+
 #include "hardware/i2c.h"
-#include <cstdio>
+#include <cmath>
 #include <pico/stdlib.h> // IWYU pragma: keep
 
 // I2C defines
@@ -12,7 +15,7 @@
 #define REG_GYRO_CONFIG 0x1B
 #define REG_ACCEL_CONFIG 0x1C
 #define REG_SMPLRT_DIV 0x19
-#define WHO_AM_I_REG 0x75
+#define WHO_AM_I_REG 0x68
 
 // Sensitivity scale factors for different ranges
 #define ACCEL_SCALE_FACTOR_2G 16384.0 // for ±2g
@@ -25,6 +28,9 @@
 #define GYRO_SCALE_FACTOR_1000DPS 32.8 // for ±1000 degrees per second
 #define GYRO_SCALE_FACTOR_2000DPS 16.4 // for ±2000 degrees per second
 
+#define TEMP_SCALE_FACTOR 340.0F
+#define TEMP_OFFSET 36.53F
+
 // Select the desired scale factor
 #define ACCEL_SCALE_FACTOR                                                     \
   ACCEL_SCALE_FACTOR_4G // Change this to the desired accelerometer range
@@ -36,63 +42,75 @@
 #define GYRO_CONFIG_VALUE 0x00  // for ±250 degrees per second
 #define SAMPLE_RATE_DIV 1       // Sample rate = 1kHz / (1 + 1) = 500Hz
 
-void mpu6050_reset() {
-  uint8_t reset[] = {REG_PWR_MGMT_1, 0x80};
-  i2c_write_blocking(I2C_PORT, MPU6050_ADDR, reset, 2, false);
-  sleep_ms(200);
-  uint8_t wake[] = {REG_PWR_MGMT_1, 0x00};
-  i2c_write_blocking(I2C_PORT, MPU6050_ADDR, wake, 2, false);
-  sleep_ms(200);
-}
+// Other constants
+#define PWR_RESET 0x80
+#define PWR_WAKE 0x00
+#define SENSOR_WAIT 200
+#define BAUD_RATE (400 * 1000)
+#define SDA_PIN 4
+#define SCL_PIN 5
+#define SENSOR_DATA_LENGTH 14
 
-void mpu6050_configure() {
-  // Set accelerometer range
-  uint8_t accel_config[] = {REG_ACCEL_CONFIG, ACCEL_CONFIG_VALUE};
-  i2c_write_blocking(I2C_PORT, MPU6050_ADDR, accel_config, 2, false);
+template <typename T> struct Vector3D {
+public:
+  T mX, mY, mZ;
 
-  // Set gyroscope range
-  uint8_t gyro_config[] = {REG_GYRO_CONFIG, GYRO_CONFIG_VALUE};
-  i2c_write_blocking(I2C_PORT, MPU6050_ADDR, gyro_config, 2, false);
-
-  // Set sample rate
-  uint8_t sample_rate[] = {REG_SMPLRT_DIV, SAMPLE_RATE_DIV};
-  i2c_write_blocking(I2C_PORT, MPU6050_ADDR, sample_rate, 2, false);
-}
-
-void mpu6050_initialize() {
-  // Initialize I2C
-  i2c_init(I2C_PORT, 400 * 1000);
-  gpio_set_function(4, GPIO_FUNC_I2C);
-  gpio_set_function(5, GPIO_FUNC_I2C);
-  gpio_pull_up(4);
-  gpio_pull_up(5);
-
-  // Reset and configure MPU6050
-  mpu6050_reset();
-  mpu6050_configure();
-
-  uint8_t who_am_i = 0;
-  uint8_t reg = WHO_AM_I_REG;
-  i2c_write_blocking(I2C_PORT, MPU6050_ADDR, &reg, 1, true);
-  i2c_read_blocking(I2C_PORT, MPU6050_ADDR, &who_am_i, 1, false);
-  printf("MPU6050 WHO_AM_I: 0x%02X\n", who_am_i);
-
-  if (who_am_i != 0x68) {
-    printf("MPU6050 not found!\n");
+  [[nodiscard]] T magnitude() const {
+    return std::sqrt((mX * mX) + (mY * mY) + (mZ * mZ));
   }
-}
 
-void mpu6050_read_raw(int16_t accel[3], int16_t gyro[3], int16_t *temp) {
-  uint8_t buffer[14];
-  uint8_t reg = REG_ACCEL_XOUT_H;
-  i2c_write_blocking(I2C_PORT, MPU6050_ADDR, &reg, 1, true);
-  i2c_read_blocking(I2C_PORT, MPU6050_ADDR, buffer, 14, false);
+  Vector3D<T> operator+(const Vector3D<T> &other) const {
+    return {mX + other.mX, mY + other.mY, mZ + other.mZ};
+  }
 
-  accel[0] = (buffer[0] << 8) | buffer[1];
-  accel[1] = (buffer[2] << 8) | buffer[3];
-  accel[2] = (buffer[4] << 8) | buffer[5];
-  *temp = (buffer[6] << 8) | buffer[7];
-  gyro[0] = (buffer[8] << 8) | buffer[9];
-  gyro[1] = (buffer[10] << 8) | buffer[11];
-  gyro[2] = (buffer[12] << 8) | buffer[13];
-}
+  Vector3D<T> operator-(const Vector3D<T> &other) const {
+    return {mX - other.mX, mY - other.mY, mZ - other.mZ};
+  }
+
+  Vector3D<T> operator*(T scalar) const {
+    return {mX * scalar, mY * scalar, mZ * scalar};
+  }
+
+  Vector3D<T> operator/(T scalar) const {
+    return {mX / scalar, mY / scalar, mZ / scalar};
+  }
+};
+
+struct MPU6050Data {
+  Vector3D<int16_t> mAccel;
+  int16_t mTemp;
+  Vector3D<int16_t> mGyro;
+};
+
+class MPU6050 {
+public:
+  MPU6050();
+
+  ~MPU6050() = default;
+
+  // Deleted special member functions to prevent copying
+  MPU6050(const MPU6050 &) = delete;
+  MPU6050 &operator=(const MPU6050 &) = delete;
+
+  // Move operations to allow transferring ownership
+  MPU6050(MPU6050 &&) noexcept = default;
+  MPU6050 &operator=(MPU6050 &&) noexcept = default;
+
+  void update();
+
+  [[nodiscard]] Vector3D<int16_t> getAccel() const;
+
+  [[nodiscard]] Vector3D<int16_t> getGyro() const;
+
+  [[nodiscard]] float getTemp() const;
+
+private:
+  static void mpu6050Configure();
+  static void mpu6050Reset();
+
+  MPU6050Data mSensorData{};
+
+  void mpu6050ReadRaw();
+};
+
+#endif // INCLUDE_MPU6050_HPP_

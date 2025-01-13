@@ -20,10 +20,26 @@ Application::Application() : mUpdateRate(UPDATE_RATE), mAdc(ADC_PIN) {
 
   // Create OSC sender
   mOSC = std::make_unique<OscBuilder>(BROADCAST_IP, OSC_PORT);
+
+  // Create MPU6050 sensor
+  mMpu6050 = MPU6050();
 }
 
 // Main loop
 void Application::update(uint32_t delta) {
+  // Send time passed between loops
   mOSC->sendOSCMessage("/delta", static_cast<float>(delta) / ONE_SECOND);
+  // Send pot value
   mOSC->sendOSCMessage("/pot", ADC::getValue());
+
+  // refresh sensor value
+  mMpu6050.update();
+
+  Vector3D<int16_t> Accel = mMpu6050.getAccel();
+  mOSC->sendOSCMessage("/accel", Accel.mX, Accel.mY, Accel.mZ);
+
+  Vector3D<int16_t> Gyro = mMpu6050.getGyro();
+  mOSC->sendOSCMessage("/gyro", Gyro.mX, Gyro.mY, Gyro.mZ);
+
+  mOSC->sendOSCMessage("/temp", mMpu6050.getTemp());
 }
