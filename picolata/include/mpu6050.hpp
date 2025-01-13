@@ -8,6 +8,7 @@
 // I2C defines
 #define I2C_PORT i2c0
 #define MPU6050_ADDR 0x68
+#define MPU6050_ID 0x68
 
 // MPU6050 register addresses
 #define REG_PWR_MGMT_1 0x6B
@@ -15,7 +16,7 @@
 #define REG_GYRO_CONFIG 0x1B
 #define REG_ACCEL_CONFIG 0x1C
 #define REG_SMPLRT_DIV 0x19
-#define WHO_AM_I_REG 0x68
+#define WHO_AM_I_REG 0x75
 
 // Sensitivity scale factors for different ranges
 #define ACCEL_SCALE_FACTOR_2G 16384.0 // for ±2g
