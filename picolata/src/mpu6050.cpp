@@ -2,7 +2,8 @@
 #include <array>
 #include <bit>
 #include <cstdint>
-#include <print>
+#include <format>
+#include <iostream>
 
 MPU6050::MPU6050() {
   // Initialize I2C
@@ -20,10 +21,10 @@ MPU6050::MPU6050() {
   uint8_t Reg = WHO_AM_I_REG;
   i2c_write_blocking(I2C_PORT, MPU6050_ADDR, &Reg, 1, true);
   i2c_read_blocking(I2C_PORT, MPU6050_ADDR, &WhoAmI, 1, false);
-  std::println("MPU6050 WHO_AM_I: 0x{:02X}", WhoAmI);
+  std::cout << "MPU6050 WHO_AM_I: " << std::format("0x{:x}", WhoAmI);
 
   if (WhoAmI != MPU6050_ID) {
-    std::println("MPU6050 not found!");
+    std::cout << "MPU6050 not found!";
   }
 }
 
