@@ -21,10 +21,10 @@ MPU6050::MPU6050() {
   uint8_t Reg = WHO_AM_I_REG;
   i2c_write_blocking(I2C_PORT, MPU6050_ADDR, &Reg, 1, true);
   i2c_read_blocking(I2C_PORT, MPU6050_ADDR, &WhoAmI, 1, false);
-  std::cout << "MPU6050 WHO_AM_I: " << std::format("0x{:x}", WhoAmI);
+  std::cout << "MPU6050 WHO_AM_I: " << std::format("0x{:x}", WhoAmI) << "\n";
 
   if (WhoAmI != MPU6050_ID) {
-    std::cout << "MPU6050 not found!";
+    std::cout << "MPU6050 not found!\n";
   }
 }
 
