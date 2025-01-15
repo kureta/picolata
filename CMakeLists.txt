@@ -45,12 +45,10 @@ target_link_libraries(
     pico_cyw43_arch_lwip_threadsafe_background
     hardware_adc
     hardware_i2c
-    tinyusb_device
-    tinyusb_board
 )
 
-pico_enable_stdio_usb(${CMAKE_PROJECT_NAME} 0)
-pico_enable_stdio_uart(${CMAKE_PROJECT_NAME} 1)
+pico_enable_stdio_usb(${CMAKE_PROJECT_NAME} 1)
+pico_enable_stdio_uart(${CMAKE_PROJECT_NAME} 0)
 
 # create map/bin/hex/uf2 file etc.
 pico_add_extra_outputs(${CMAKE_PROJECT_NAME})
