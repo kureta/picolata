@@ -1,9 +1,9 @@
 #ifndef INCLUDE_APPLICATION_HPP_
 #define INCLUDE_APPLICATION_HPP_
 
+#include "MPU6050_6Axis_MotionApps_V6_12.h" // IWYU pragma: keep
 #include "adc.hpp"
 #include "modernosc.hpp"
-#include "mpu6050.hpp"
 #include <cstdint>
 #include <memory>
 
